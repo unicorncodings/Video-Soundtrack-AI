@@ -1,7 +1,7 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef } from 'react';
 import type { AnalysisResult } from '../types';
-import { MUSIC_TRACKS } from '../constants';
+import { YouTubeIcon } from './icons';
 
 interface RecommendationDisplayProps {
   videoUrl: string;
@@ -10,51 +10,10 @@ interface RecommendationDisplayProps {
 
 const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({ videoUrl, analysis }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [selectedMusic, setSelectedMusic] = useState<string | null>(null);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-    if (!video || !audio) return;
-
-    const syncPlay = () => audio.play().catch(e => console.error("Audio play failed:", e));
-    const syncPause = () => audio.pause();
-    const syncSeek = () => { audio.currentTime = video.currentTime; };
-
-    video.addEventListener('play', syncPlay);
-    video.addEventListener('pause', syncPause);
-    video.addEventListener('seeking', syncSeek);
-    
-    return () => {
-      video.removeEventListener('play', syncPlay);
-      video.removeEventListener('pause', syncPause);
-      video.removeEventListener('seeking', syncSeek);
-    };
-  }, [selectedMusic]);
-
-  const handleMusicSelect = (genre: string) => {
-    const trackUrl = MUSIC_TRACKS[genre];
-    if (trackUrl) {
-      if (selectedMusic === trackUrl) {
-        // Deselect
-        setSelectedMusic(null);
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.src = '';
-        }
-      } else {
-        setSelectedMusic(trackUrl);
-        if (audioRef.current) {
-          audioRef.current.src = trackUrl;
-          audioRef.current.load();
-          if (videoRef.current && !videoRef.current.paused) {
-            audioRef.current.currentTime = videoRef.current.currentTime;
-            audioRef.current.play().catch(e => console.error("Audio play failed on select:", e));
-          }
-        }
-      }
-    }
+  const createYouTubeSearchLink = (songName: string, artist: string) => {
+    const query = encodeURIComponent(`${songName} ${artist}`);
+    return `https://www.youtube.com/results?search_query=${query}`;
   };
 
   return (
@@ -63,24 +22,40 @@ const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({ videoUrl,
         <div className="w-full bg-black rounded-lg overflow-hidden shadow-2xl shadow-purple-900/20 aspect-video">
           <video ref={videoRef} src={videoUrl} controls className="w-full h-full object-contain" />
         </div>
-        <audio ref={audioRef} />
       </div>
 
-      <div className="lg:w-1/3 bg-gray-800 rounded-lg p-6 shadow-lg flex flex-col">
-        <h2 className="text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">AI Analysis</h2>
+      <div className="lg:w-1/3 bg-gray-800 rounded-lg p-6 shadow-lg flex flex-col max-h-[80vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2 sticky top-0 bg-gray-800">AI Analysis</h2>
         <p className="text-gray-300 mb-6 italic">"{analysis.description}"</p>
         
-        <h3 className="text-xl font-semibold text-white mb-4">Recommended Soundtracks</h3>
-        <div className="flex flex-col gap-3">
-          {analysis.recommendations.map((genre) => (
-            <button
-              key={genre}
-              onClick={() => handleMusicSelect(genre)}
-              className={`w-full text-left p-3 rounded-md transition-all duration-200 ${selectedMusic === MUSIC_TRACKS[genre] ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-700 hover:bg-purple-500 hover:text-white'}`}
+        <h3 className="text-xl font-semibold text-white mb-4 sticky top-[70px] bg-gray-800">Trending Soundtrack Recommendations</h3>
+        <div className="flex flex-col gap-4">
+          {analysis.recommendations.map((song, index) => (
+            <div
+              key={index}
+              className="bg-gray-700 p-4 rounded-lg flex justify-between items-center transition-transform duration-200 hover:scale-105"
             >
-              <span className="font-medium">{genre}</span>
-            </button>
+              <div>
+                <p className="font-bold text-white text-lg">{song.songName}</p>
+                <p className="text-gray-400 text-sm">{song.artist}</p>
+              </div>
+              <a
+                href={createYouTubeSearchLink(song.songName, song.artist)}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Search on YouTube"
+                aria-label={`Search for ${song.songName} by ${song.artist} on YouTube`}
+                className="bg-gray-600 hover:bg-red-600 text-white p-2 rounded-full transition-colors duration-200"
+              >
+                <YouTubeIcon className="w-6 h-6" />
+              </a>
+            </div>
           ))}
+        </div>
+        <div className="mt-auto pt-6">
+          <p className="text-xs text-gray-500 text-center">
+            These are AI-powered recommendations. You are responsible for ensuring proper licensing and copyright compliance if you choose to use any of these songs.
+          </p>
         </div>
       </div>
     </div>
