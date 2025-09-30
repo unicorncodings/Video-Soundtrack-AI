@@ -1,0 +1,5 @@
+{
+  "name": "Video Soundtrack AI",
+  "description": "Upload a video and get AI-powered music recommendations. Preview your video with the suggested soundtracks instantly.",
+  "requestFramePermissions": []
+}
