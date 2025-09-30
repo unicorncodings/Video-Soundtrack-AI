@@ -1,8 +1,13 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { AnalysisResult } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// WARNING: Storing API keys directly in the code is a serious security risk
+// and is strongly discouraged. This key will be visible to anyone who has
+// access to your code. For any real application, you should load the key
+// from a secure environment variable instead (e.g., process.env.API_KEY).
+const API_KEY = "AIzaSyApt39J_XSrVVvTICpPgHtZPSJyjMm-lqI";
+
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 export async function getMusicRecommendationsForVideo(frames: string[]): Promise<AnalysisResult> {
   try {
